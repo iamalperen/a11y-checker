@@ -1,24 +1,42 @@
 {
   "name": "a11y-checker",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "prepare": "husky install",
+    "lint": "eslint '*/**/*.{js,jsx,ts,tsx}'",
+    "format": "prettier --write ."
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.css": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
+    "next": "15.0.1",
     "react": "19.0.0-rc-69d4b800-20241021",
-    "react-dom": "19.0.0-rc-69d4b800-20241021",
-    "next": "15.0.1"
+    "react-dom": "19.0.0-rc-69d4b800-20241021"
   },
   "devDependencies": {
-    "typescript": "^5",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "eslint": "^8",
-    "eslint-config-next": "15.0.1"
+    "eslint": "^8.57.1",
+    "eslint-config-next": "15.0.1",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "husky": "^8.0.0",
+    "lint-staged": "^15.2.10",
+    "prettier": "^3.3.3",
+    "stylelint": "^16.10.0",
+    "stylelint-config-standard": "^36.0.1",
+    "typescript": "^5"
   }
 }

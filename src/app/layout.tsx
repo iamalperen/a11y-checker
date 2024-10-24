@@ -1,5 +1,8 @@
 import type { Metadata } from 'next';
+import 'normalize.css';
 import '../styles/globals.css';
+import { ThemeProvider } from '@/context/ThemeContext';
+import Header from '@/components/header/Header';
 
 export const metadata: Metadata = {
   title: 'Accessibility Checker',
@@ -18,7 +21,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <ThemeProvider>
+          <Header />
+          <main>{children}</main>
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

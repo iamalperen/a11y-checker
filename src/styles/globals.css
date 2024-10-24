@@ -1,4 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
+@import '@fortawesome/fontawesome-svg-core/styles.css';
+
+:root {
+  --background-color: #fff;
+  --text-color: #000;
+}
+
+[data-theme='dark'] {
+  --background-color: #3b3363;
+  --text-color: #fff;
+  ---border-color: #473f72;
+}
 
 * {
   box-sizing: border-box;
@@ -9,7 +21,9 @@
 
 body,
 html {
-  background-color: #f8f9fa;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  border-color: #473f72;
   height: 100%;
   width: 100%;
 }
@@ -48,8 +62,4 @@ html {
   .container {
     max-width: 1280px;
   }
-}
-
-:root {
-  /** color and other variables will be here **/
 }

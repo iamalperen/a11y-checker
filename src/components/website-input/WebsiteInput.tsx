@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import styles from './WebsiteInput.module.css';
 import { faSearch, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 export default function WebsiteInput() {
+  const router = useRouter();
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
@@ -19,16 +21,12 @@ export default function WebsiteInput() {
       return;
     }
 
-    // Yükleme durumunu başlat ve form gönderimi simüle et
+    // Yükleme durumunu başlat
     setIsError(false);
     setIsLoading(true);
 
-    // Gerçek bir API çağrısı burada yapılacak
-    setTimeout(() => {
-      setIsLoading(false);
-      // Başarılı sonuç için burada yönlendirme yapılabilir
-      // veya state'e sonuçlar eklenebilir
-    }, 2000);
+    // Analiz sayfasına yönlendir
+    router.push(`/results?url=${encodeURIComponent(url)}`);
   };
 
   const isValidUrl = (urlString: string): boolean => {
@@ -36,7 +34,6 @@ export default function WebsiteInput() {
       const url = new URL(urlString);
       return url.protocol === 'http:' || url.protocol === 'https:';
     } catch (e) {
-      console.log(e);
       return false;
     }
   };

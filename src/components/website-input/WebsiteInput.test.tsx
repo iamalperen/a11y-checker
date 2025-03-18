@@ -1,7 +1,16 @@
+/// <reference types="jest" />
 import '@testing-library/jest-dom';
 import { render, screen, fireEvent } from '@testing-library/react';
 import WebsiteInput from './WebsiteInput';
 import styles from './WebsiteInput.module.css';
+import { jest } from '@jest/globals';
+
+// Next.js useRouter hook'unu mock et
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+  }),
+}));
 
 describe('WebsiteInput Component', () => {
   it('renders input and button', () => {
@@ -25,25 +34,18 @@ describe('WebsiteInput Component', () => {
     expect(input).toHaveValue('https://example.com');
   });
 
-  it('triggers an action when the button is clicked', () => {
-    const handleClick = jest.fn();
-    render(
-      <div className={styles.inputContainer}>
-        <input
-          type="text"
-          className={styles.input}
-          placeholder="https://example.com"
-        />
-        <button className={styles.button} onClick={handleClick}>
-          Analyze
-        </button>
-      </div>
-    );
+  it('shows error message for invalid URL', () => {
+    render(<WebsiteInput />);
 
+    const input = screen.getByPlaceholderText('https://example.com');
     const button = screen.getByRole('button', { name: /analyze/i });
+
+    // Geçersiz URL gir
+    fireEvent.change(input, { target: { value: 'invalid-url' } });
     fireEvent.click(button);
 
-    // Check if handleClick was called
-    expect(handleClick).toHaveBeenCalledTimes(1);
+    // Hata mesajını kontrol et
+    const errorMessage = screen.getByText(/Please enter a valid URL/i);
+    expect(errorMessage).toBeInTheDocument();
   });
 });

@@ -6,30 +6,30 @@ export default function Tools() {
       <div className="container">
         <h1>Accessibility Tools</h1>
         <p>
-          This page will contain various accessibility tools to help you improve
-          your website.
+          This page contains various accessibility tools to help you improve
+          your website's accessibility and comply with WCAG standards.
         </p>
 
         <div className={styles.toolsGrid}>
           <div className={styles.toolCard}>
             <h2>Website Analyzer</h2>
-            <p>Check the accessibility of any website by entering its URL.</p>
+            <p>Comprehensive accessibility analysis of any website by entering its URL. Checks HTML structure, ARIA usage, color contrast, keyboard navigation, and form accessibility.</p>
           </div>
           <div className={styles.toolCard}>
             <h2>Color Contrast Checker</h2>
             <p>
-              Verify if your color combinations meet accessibility standards.
+              Advanced color contrast analysis that detects potential issues in your website's color palette. Verifies if your color combinations meet WCAG 2.1 AA standards (4.5:1 for normal text).
             </p>
           </div>
           <div className={styles.toolCard}>
-            <h2>ARIA Validator</h2>
+            <h2>Enhanced ARIA Validator</h2>
             <p>
-              Validate your ARIA attributes and ensure proper implementation.
+              In-depth ARIA validation that checks for deprecated roles, redundant attributes, empty values, valid references, and proper parent-child relationships according to WAI-ARIA specifications.
             </p>
           </div>
           <div className={styles.toolCard}>
             <h2>Keyboard Navigation Tester</h2>
-            <p>Test how keyboard-friendly your site is.</p>
+            <p>Tests keyboard accessibility by identifying elements that may not be accessible without a mouse and checking for proper tab order and focus indicators.</p>
           </div>
         </div>
       </div>

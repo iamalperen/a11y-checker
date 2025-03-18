@@ -4,7 +4,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import WebsiteInput from './WebsiteInput';
 import { jest } from '@jest/globals';
 
-// Next.js useRouter hook'unu mock et
+// Mock the Next.js useRouter hook
 jest.mock('next/navigation', () => ({
   useRouter: () => ({
     push: jest.fn(),
@@ -39,11 +39,11 @@ describe('WebsiteInput Component', () => {
     const input = screen.getByPlaceholderText('https://example.com');
     const button = screen.getByRole('button', { name: /analyze/i });
 
-    // Geçersiz URL gir
+    // Enter invalid URL
     fireEvent.change(input, { target: { value: 'invalid-url' } });
     fireEvent.click(button);
 
-    // Hata mesajını kontrol et
+    // Check error message
     const errorMessage = screen.getByText(/Please enter a valid URL/i);
     expect(errorMessage).toBeInTheDocument();
   });

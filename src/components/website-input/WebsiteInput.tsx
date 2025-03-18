@@ -15,17 +15,17 @@ export default function WebsiteInput() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Input doğrulama
+    // Input validation
     if (!url || !url.trim() || !isValidUrl(url)) {
       setIsError(true);
       return;
     }
 
-    // Yükleme durumunu başlat
+    // Start loading state
     setIsError(false);
     setIsLoading(true);
 
-    // Analiz sayfasına yönlendir
+    // Redirect to analysis page
     router.push(`/results?url=${encodeURIComponent(url)}`);
   };
 

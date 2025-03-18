@@ -1,9 +1,139 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { JSDOM } from 'jsdom';
-import * as axeCore from 'axe-core';
 
-// Legacy accessibility checking tools for fallback
-const legacyAccessibilityTools = {
+// Basic HTML analysis functions
+const runBasicAccessibilityChecks = async (html: string) => {
+  console.log('Running basic accessibility checks...');
+  
+  // HTML structure checks
+  const htmlStructureIssues = [];
+
+  if (!html.includes('<h1')) {
+    htmlStructureIssues.push({
+      type: 'error',
+      message: 'Page does not have an h1 heading',
+      code: 'page-has-heading-one',
+    });
+  }
+
+  if (!html.match(/<html[^>]*lang=/)) {
+    htmlStructureIssues.push({
+      type: 'error',
+      message: 'HTML element should have a lang attribute',
+      code: 'html-has-lang',
+    });
+  }
+
+  if (!html.match(/<title[^>]*>/)) {
+    htmlStructureIssues.push({
+      type: 'error',
+      message: 'Document should have a title',
+      code: 'document-title',
+    });
+  }
+
+  // Check for images without alt attributes
+  const imgRegex = /<img(?![^>]*alt=(['"]).*?\1)[^>]*>/g;
+  const imagesWithoutAlt = html.match(imgRegex);
+  if (imagesWithoutAlt && imagesWithoutAlt.length > 0) {
+    htmlStructureIssues.push({
+      type: 'error',
+      message: 'Images should have alt attributes',
+      code: 'img-alt',
+      description: `${imagesWithoutAlt.length} images found without alt attributes.`,
+    });
+  }
+
+  // Form accessibility
+  const formResult = await accessibilityCheckers.formAccessibility(html);
+
+  // ARIA checks
+  const ariaIssues = [];
+  const ariaAttributes = html.match(/aria-[a-z]+=["'][^"']*["']/g) || [];
+  for (const attr of ariaAttributes) {
+    if (
+      attr.includes('aria-hidden="true"') &&
+      (attr.includes('button') || attr.includes('a href'))
+    ) {
+      ariaIssues.push({
+        type: 'warning',
+        message:
+          'aria-hidden="true" should not be used on interactive elements',
+        code: 'aria-hidden-interactive',
+      });
+    }
+  }
+
+  // Color contrast warning
+  const colorContrastIssue = {
+    type: 'warning',
+    message: 'Color contrast cannot be automatically checked',
+    code: 'color-contrast-info',
+    description: 'For color contrast, use specialized tools like WebAIM Contrast Checker or axe DevTools.'
+  };
+
+  // Keyboard accessibility checks
+  const keyboardIssues = [];
+  
+  // tabindex > 0 check
+  const tabindexPattern = /tabindex=["'](\d+)["']/g;
+  let match;
+  while ((match = tabindexPattern.exec(html)) !== null) {
+    if (parseInt(match[1]) > 0) {
+      keyboardIssues.push({
+        type: 'warning',
+        message: 'Avoid positive tabindex values',
+        code: 'tabindex-positive',
+        description: 'Positive tabindex values can disrupt the natural document order and cause accessibility issues.',
+      });
+      break;
+    }
+  }
+
+  // Warning for onclick without onkeydown/onkeyup/onkeypress
+  const onclickPattern = /onclick=["'][^"']*["']/g;
+  const onkeyPattern = /onkey(down|up|press)=["'][^"']*["']/g;
+  
+  const onclickElements = html.match(onclickPattern) || [];
+  const onkeyElements = html.match(onkeyPattern) || [];
+  
+  if (onclickElements.length > onkeyElements.length) {
+    keyboardIssues.push({
+      type: 'warning',
+      message: 'Keyboard event handlers may be missing',
+      code: 'keyboard-event-handler',
+      description: 'Elements with onclick handlers should generally have corresponding onkey* handlers for keyboard users.',
+    });
+  }
+
+  return {
+    htmlStructure: {
+      passed: htmlStructureIssues.length === 0,
+      issues: htmlStructureIssues,
+    },
+    ariaUsage: {
+      passed: ariaIssues.length === 0,
+      issues: ariaIssues,
+    },
+    colorContrast: {
+      passed: false,
+      issues: [colorContrastIssue],
+    },
+    formAccessibility: formResult,
+    keyboardAccessibility: {
+      passed: keyboardIssues.length === 0,
+      issues: keyboardIssues.length > 0 ? keyboardIssues : [
+        {
+          type: 'warning',
+          message: 'Keyboard accessibility cannot be fully checked',
+          code: 'keyboard-info',
+        },
+      ],
+    },
+  };
+};
+
+// Helper functions for accessibility checks
+const accessibilityCheckers = {
   // Form accessibility check
   formAccessibility: async (html: string) => {
     const issues = [];
@@ -32,6 +162,46 @@ const legacyAccessibilityTools = {
       }
     }
 
+    // Select elements label check
+    const selects = html.match(/<select[^>]*>/g) || [];
+    for (const select of selects) {
+      const id = select.match(/id=["']([^"']*)["']/)?.[1];
+      
+      if (!id) {
+        issues.push({
+          type: 'error',
+          message: 'Select element without an ID. Form controls should have IDs for label association.',
+          code: 'select-id',
+        });
+      } else if (!html.includes(`for="${id}"`)) {
+        issues.push({
+          type: 'error',
+          message: `Select with ID "${id}" has no associated label element.`,
+          code: 'select-label',
+        });
+      }
+    }
+
+    // Textarea elements label check
+    const textareas = html.match(/<textarea[^>]*>/g) || [];
+    for (const textarea of textareas) {
+      const id = textarea.match(/id=["']([^"']*)["']/)?.[1];
+      
+      if (!id) {
+        issues.push({
+          type: 'error',
+          message: 'Textarea element without an ID. Form controls should have IDs for label association.',
+          code: 'textarea-id',
+        });
+      } else if (!html.includes(`for="${id}"`)) {
+        issues.push({
+          type: 'error',
+          message: `Textarea with ID "${id}" has no associated label element.`,
+          code: 'textarea-label',
+        });
+      }
+    }
+
     return {
       passed: issues.length === 0,
       issues,
@@ -39,87 +209,79 @@ const legacyAccessibilityTools = {
   },
 };
 
-// Fallback for when axe-core cannot run
-const runBasicAccessibilityChecks = async (html: string) => {
-  // Simple HTML structure checks
-  const htmlStructureIssues = [];
-
-  if (!html.includes('<h1')) {
-    htmlStructureIssues.push({
-      type: 'error',
-      message: 'Page does not have an h1 heading',
-      code: 'page-has-heading-one',
+// Main accessibility analysis function
+async function runAccessibilityAnalysis(url: string) {
+  try {
+    // Get HTML content from URL
+    console.log(`Fetching HTML content from ${url}...`);
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'A11Y-Checker/1.0 Accessibility Analyzer'
+      }
     });
-  }
-
-  if (!html.match(/<html[^>]*lang=/)) {
-    htmlStructureIssues.push({
-      type: 'error',
-      message: 'HTML element should have a lang attribute',
-      code: 'html-has-lang',
-    });
-  }
-
-  if (!html.match(/<title[^>]*>/)) {
-    htmlStructureIssues.push({
-      type: 'error',
-      message: 'Document should have a title',
-      code: 'document-title',
-    });
-  }
-
-  // Simple form accessibility check
-  const formResult = await legacyAccessibilityTools.formAccessibility(html);
-
-  // Simple ARIA checks
-  const ariaIssues = [];
-  const ariaAttributes = html.match(/aria-[a-z]+=["'][^"']*["']/g) || [];
-  for (const attr of ariaAttributes) {
-    if (
-      attr.includes('aria-hidden="true"') &&
-      (attr.includes('button') || attr.includes('a href'))
-    ) {
-      ariaIssues.push({
-        type: 'warning',
-        message:
-          'aria-hidden="true" should not be used on interactive elements',
-        code: 'aria-hidden-interactive',
-      });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch URL: ${response.statusText}`);
     }
+    
+    const html = await response.text();
+    
+    // Apply basic checks and get results
+    const basicResults = await runBasicAccessibilityChecks(html);
+    
+    // Calculate statistics
+    const errorCount = Object.values(basicResults).reduce(
+      (count, category: any) => 
+        count + category.issues.filter((issue: any) => issue.type === 'error').length,
+      0
+    );
+    
+    const warningCount = Object.values(basicResults).reduce(
+      (count, category: any) => 
+        count + category.issues.filter((issue: any) => issue.type === 'warning').length,
+      0
+    );
+    
+    const passCount = Object.values(basicResults).filter(
+      (category: any) => category.passed
+    ).length;
+    
+    // Create response
+    return {
+      url,
+      timestamp: new Date().toISOString(),
+      summary: {
+        passed: passCount,
+        warnings: warningCount,
+        errors: errorCount,
+        total: errorCount + warningCount,
+      },
+      tests: basicResults,
+      analysisNote: 'Basic accessibility checks are being applied. For more comprehensive analysis, use browser extensions like WAVE, axe DevTools, or Lighthouse.',
+    };
+  } catch (error) {
+    console.error('Accessibility analysis error:', error);
+    return {
+      url,
+      timestamp: new Date().toISOString(),
+      summary: {
+        passed: 0,
+        warnings: 0,
+        errors: 1,
+        total: 1,
+      },
+      tests: {
+        htmlStructure: { passed: false, issues: [] },
+        ariaUsage: { passed: false, issues: [] },
+        colorContrast: { passed: false, issues: [] },
+        formAccessibility: { passed: false, issues: [] },
+        keyboardAccessibility: { passed: false, issues: [] },
+      },
+      error: error instanceof Error ? error.message : String(error),
+      analysisNote: 'An error occurred during the accessibility analysis. Please try again later or analyze another URL.',
+    };
   }
-
-  return {
-    htmlStructure: {
-      passed: htmlStructureIssues.length === 0,
-      issues: htmlStructureIssues,
-    },
-    ariaUsage: {
-      passed: ariaIssues.length === 0,
-      issues: ariaIssues,
-    },
-    colorContrast: {
-      passed: true,
-      issues: [
-        {
-          type: 'warning',
-          message: 'Color contrast could not be automatically checked',
-          code: 'color-contrast-info',
-        },
-      ],
-    },
-    formAccessibility: formResult,
-    keyboardAccessibility: {
-      passed: true,
-      issues: [
-        {
-          type: 'warning',
-          message: 'Keyboard accessibility could not be automatically checked',
-          code: 'keyboard-info',
-        },
-      ],
-    },
-  };
-};
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -142,318 +304,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch the web page
-    let response;
-    try {
-      response = await fetch(url);
-      if (!response.ok) {
-        return NextResponse.json(
-          { error: `Failed to fetch URL: ${response.statusText}` },
-          { status: response.status }
-        );
-      }
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Network error';
-      return NextResponse.json(
-        { error: `Network error: ${errorMessage}` },
-        { status: 500 }
-      );
-    }
-
-    // Get HTML content
-    const html = await response.text();
-
-    // Set up JSDOM environment with proper configuration
-    const dom = new JSDOM(html, {
-      url,
-      runScripts: 'outside-only',
-      resources: 'usable',
-      pretendToBeVisual: true,
-    });
-
-    // Create proper window and document objects for axe
-    const window = dom.window;
-    const document = window.document;
-
-    let results;
-
-    try {
-      // Configure axe-core with the JSDOM window
-      axeCore.configure({
-        // Ensure we don't try to use browser features that aren't available
-        allowedOrigins: ['<safe_origin>', 'http://localhost'],
-      });
-
-      // Run axe accessibility tests
-      const axeResults = await axeCore.run(document, {
-        rules: {
-          'color-contrast': { enabled: true },
-          'page-has-heading-one': { enabled: true },
-          'landmark-one-main': { enabled: true },
-          region: { enabled: true },
-          'image-alt': { enabled: true },
-          'input-button-name': { enabled: true },
-          label: { enabled: true },
-          'link-name': { enabled: true },
-          list: { enabled: true },
-          listitem: { enabled: true },
-          'aria-roles': { enabled: true },
-          'aria-valid-attr': { enabled: true },
-          'aria-valid-attr-value': { enabled: true },
-          'button-name': { enabled: true },
-          'duplicate-id-active': { enabled: true },
-          'duplicate-id-aria': { enabled: true },
-          'form-field-multiple-labels': { enabled: true },
-          'frame-title': { enabled: true },
-          'heading-order': { enabled: true },
-          'html-has-lang': { enabled: true },
-          'html-lang-valid': { enabled: true },
-          'meta-viewport': { enabled: true },
-          'document-title': { enabled: true },
-        },
-      });
-
-      // Process the axe results
-      const formattedViolations = axeResults.violations.map((violation) => {
-        return {
-          type: 'error',
-          code: violation.id,
-          message: violation.help,
-          description: violation.description,
-          helpUrl: violation.helpUrl,
-          impact: violation.impact,
-          nodes: violation.nodes.map((node) => ({
-            html: node.html,
-            failureSummary: node.failureSummary,
-            impact: node.impact,
-            target: node.target,
-          })),
-        };
-      });
-
-      const formattedIncomplete = axeResults.incomplete.map((check) => {
-        return {
-          type: 'warning',
-          code: check.id,
-          message: check.help,
-          description: check.description,
-          helpUrl: check.helpUrl,
-          impact: check.impact,
-          nodes: check.nodes.map((node) => ({
-            html: node.html,
-            failureSummary: node.failureSummary,
-            impact: node.impact,
-            target: node.target,
-          })),
-        };
-      });
-
-      const formattedPasses = axeResults.passes.map((pass) => {
-        return {
-          type: 'pass',
-          code: pass.id,
-          message: pass.help,
-          description: pass.description,
-          helpUrl: pass.helpUrl,
-          nodes: pass.nodes.length,
-        };
-      });
-
-      // Create structured results by category
-      const structuredResults = {
-        HTMLStructure: {
-          passed: !axeResults.violations.some((v) =>
-            [
-              'page-has-heading-one',
-              'heading-order',
-              'document-title',
-              'html-has-lang',
-              'html-lang-valid',
-            ].includes(v.id)
-          ),
-          issues: [
-            ...formattedViolations.filter((v) =>
-              [
-                'page-has-heading-one',
-                'heading-order',
-                'document-title',
-                'html-has-lang',
-                'html-lang-valid',
-              ].includes(v.code)
-            ),
-            ...formattedIncomplete.filter((v) =>
-              [
-                'page-has-heading-one',
-                'heading-order',
-                'document-title',
-                'html-has-lang',
-                'html-lang-valid',
-              ].includes(v.code)
-            ),
-          ],
-        },
-        ariaUsage: {
-          passed: !axeResults.violations.some((v) =>
-            [
-              'aria-roles',
-              'aria-valid-attr',
-              'aria-valid-attr-value',
-              'region',
-              'landmark-one-main',
-            ].includes(v.id)
-          ),
-          issues: [
-            ...formattedViolations.filter((v) =>
-              [
-                'aria-roles',
-                'aria-valid-attr',
-                'aria-valid-attr-value',
-                'region',
-                'landmark-one-main',
-              ].includes(v.code)
-            ),
-            ...formattedIncomplete.filter((v) =>
-              [
-                'aria-roles',
-                'aria-valid-attr',
-                'aria-valid-attr-value',
-                'region',
-                'landmark-one-main',
-              ].includes(v.code)
-            ),
-          ],
-        },
-        colorContrast: {
-          passed: !axeResults.violations.some((v) => v.id === 'color-contrast'),
-          issues: [
-            ...formattedViolations.filter((v) => v.code === 'color-contrast'),
-            ...formattedIncomplete.filter((v) => v.code === 'color-contrast'),
-          ],
-        },
-        keyboardAccessibility: {
-          passed: !axeResults.violations.some((v) =>
-            ['button-name', 'link-name', 'input-button-name'].includes(v.id)
-          ),
-          issues: [
-            ...formattedViolations.filter((v) =>
-              ['button-name', 'link-name', 'input-button-name'].includes(v.code)
-            ),
-            ...formattedIncomplete.filter((v) =>
-              ['button-name', 'link-name', 'input-button-name'].includes(v.code)
-            ),
-          ],
-        },
-        formAccessibility: {
-          passed: !axeResults.violations.some((v) =>
-            [
-              'label',
-              'form-field-multiple-labels',
-              'input-button-name',
-            ].includes(v.id)
-          ),
-          issues: [
-            ...formattedViolations.filter((v) =>
-              [
-                'label',
-                'form-field-multiple-labels',
-                'input-button-name',
-              ].includes(v.code)
-            ),
-            ...formattedIncomplete.filter((v) =>
-              [
-                'label',
-                'form-field-multiple-labels',
-                'input-button-name',
-              ].includes(v.code)
-            ),
-          ],
-        },
-      };
-
-      // Calculate summary statistics
-      const errorCount = formattedViolations.length;
-      const warningCount = formattedIncomplete.length;
-      const totalIssues = errorCount + warningCount;
-
-      // Create the final response
-      results = {
-        url,
-        timestamp: new Date().toISOString(),
-        summary: {
-          passed: Object.values(structuredResults).filter(
-            (category) => (category as any).passed
-          ).length,
-          warnings: warningCount,
-          errors: errorCount,
-          total: totalIssues,
-        },
-        tests: {
-          htmlStructure: structuredResults.HTMLStructure,
-          ariaUsage: structuredResults.ariaUsage,
-          colorContrast: structuredResults.colorContrast,
-          keyboardAccessibility: structuredResults.keyboardAccessibility,
-          formAccessibility: structuredResults.formAccessibility,
-        },
-        axeVersion: axeResults.testEngine.version,
-        passedRules: formattedPasses,
-      };
-    } catch (axeError) {
-      console.warn('Error running axe-core analysis:', axeError);
-      console.log('Falling back to basic accessibility checks');
-
-      // If axe-core fails, fall back to basic accessibility checks
-      const basicResults = await runBasicAccessibilityChecks(html);
-
-      // Calculate summary statistics for basic results
-      const errorCount = Object.values(
-        basicResults as Record<string, { issues: Array<{ type: string }> }>
-      ).reduce(
-        (count, category: { issues: Array<{ type: string }> }) =>
-          count +
-          category.issues.filter(
-            (issue: { type: string }) => issue.type === 'error'
-          ).length,
-        0
-      );
-
-      const warningCount = Object.values(basicResults).reduce(
-        (count, category: { issues: Array<{ type: string }> }) =>
-          count +
-          category.issues.filter(
-            (issue: { type: string }) => issue.type === 'warning'
-          ).length,
-        0
-      );
-
-      const passedCount = Object.values(basicResults).filter(
-        (category: { passed: boolean }) => category.passed
-      ).length;
-
-      // Create the final response with basic results
-      results = {
-        url,
-        timestamp: new Date().toISOString(),
-        summary: {
-          passed: passedCount,
-          warnings: warningCount,
-          errors: errorCount,
-          total: errorCount + warningCount,
-        },
-        tests: basicResults,
-        usingFallback: true,
-        fallbackReason:
-          'Advanced accessibility testing could not run in this environment. Using basic checks instead.',
-      };
-    }
+    // Run the analysis
+    const results = await runAccessibilityAnalysis(url);
 
     return NextResponse.json(results);
-  } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Internal server error';
-    console.error('Error in accessibility analysis:', errorMessage);
+  } catch (error) {
+    console.error('Unexpected error in API:', error);
     return NextResponse.json(
-      { error: `Internal server error: ${errorMessage}` },
+      { 
+        error: 'Server error processing your request',
+        details: error instanceof Error ? error.message : String(error)
+      },
       { status: 500 }
     );
   }

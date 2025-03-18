@@ -10,6 +10,7 @@ import {
   faExclamationTriangle,
   faCircleExclamation,
   faSpinner,
+  faSearch,
 } from '@fortawesome/free-solid-svg-icons';
 import PdfReport from '@/components/pdf-report/PdfReport';
 
@@ -50,6 +51,9 @@ interface AnalysisResults {
     keyboardAccessibility: TestResult;
     formAccessibility: TestResult;
   };
+  analysisMode?: 'server' | 'client' | 'hybrid';
+  error?: string;
+  analysisNote?: string;
 }
 
 // Function to determine color and icon based on issue type
@@ -124,12 +128,44 @@ const getSuggestion = (code: string) => {
     'input-id': 'Add a unique ID to every form input element.',
     'input-label':
       'Associate labels with input elements using the for attribute that matches the input ID.',
+    'document-title': 'Provide a clear and descriptive title for your document.',
+    'html-has-lang': 'Specify language in the html element using the lang attribute.',
+    'html-lang-valid': 'Use a valid language code in the lang attribute.',
+    'meta-viewport': 'Ensure your meta viewport tag doesn\'t disable user scaling.',
+    'select-id': 'Add a unique ID to every select element.',
+    'select-label': 'Associate labels with select elements using the for attribute that matches the select ID.',
+    'textarea-id': 'Add a unique ID to every textarea element.',
+    'textarea-label': 'Associate labels with textarea elements using the for attribute that matches the textarea ID.',
   };
 
   return (
     suggestions[code] ||
     'Review WCAG guidelines for more information on this issue.'
   );
+};
+
+// Simple function to fetch server analysis
+const fetchServerAnalysis = async (url: string) => {
+  try {
+    // Get the server's basic analysis
+    const serverResponse = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ url }),
+    });
+
+    if (!serverResponse.ok) {
+      const errorData = await serverResponse.json();
+      throw new Error(errorData.error || 'Failed to analyze website on server');
+    }
+
+    return await serverResponse.json();
+  } catch (error) {
+    console.error('Error during accessibility analysis:', error);
+    throw error;
+  }
 };
 
 function ResultsContent() {
@@ -149,20 +185,8 @@ function ResultsContent() {
       }
 
       try {
-        const response = await fetch('/api/analyze', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ url }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to analyze website');
-        }
-
-        const data = await response.json();
+        // Get server analysis results
+        const data = await fetchServerAnalysis(url);
         setResults(data);
       } catch (err: unknown) {
         const errorMessage =
@@ -249,30 +273,51 @@ function ResultsContent() {
                 {results.url}
               </a>
             </h2>
-            <p className={styles.timestamp}>
-              Analyzed on: {new Date(results.timestamp).toLocaleString()}
+            <p>
+              Analysis performed on{' '}
+              {new Date(results.timestamp).toLocaleString()}
             </p>
-          </div>
 
-          <div className={styles.summaryStats}>
-            <div className={`${styles.statItem} ${styles.statSuccess}`}>
-              <FontAwesomeIcon icon={faCheckCircle} size="lg" />
-              <span className={styles.statValue}>{results.summary.passed}</span>
-              <span className={styles.statLabel}>Passed</span>
+            <div className={styles.analysisMode}>
+              <div className={styles.analysisNotice}>
+                <span className={styles.basicAnalysis}>
+                  <FontAwesomeIcon icon={faSearch} /> Basic Analysis Mode
+                </span>
+                <p className={styles.analysisModeDescription}>
+                  {results.analysisNote || 'This analysis includes basic accessibility checks. For more comprehensive analysis, use specialized tools like WebAIM WAVE, axe DevTools, or Lighthouse.'}
+                  {results.error && (
+                    <span className={styles.analysisError}>
+                      <br />Error: {results.error}
+                    </span>
+                  )}
+                </p>
+              </div>
             </div>
 
-            <div className={`${styles.statItem} ${styles.statWarning}`}>
-              <FontAwesomeIcon icon={faExclamationTriangle} size="lg" />
-              <span className={styles.statValue}>
-                {results.summary.warnings}
-              </span>
-              <span className={styles.statLabel}>Warnings</span>
+            <div className={styles.stats}>
+              <div className={`${styles.statItem} ${styles.statSuccess}`}>
+                <FontAwesomeIcon icon={faCheckCircle} size="lg" />
+                <span className={styles.statValue}>{results.summary.passed}</span>
+                <span className={styles.statLabel}>Passed</span>
+              </div>
+
+              <div className={`${styles.statItem} ${styles.statWarning}`}>
+                <FontAwesomeIcon icon={faExclamationTriangle} size="lg" />
+                <span className={styles.statValue}>
+                  {results.summary.warnings}
+                </span>
+                <span className={styles.statLabel}>Warnings</span>
+              </div>
+
+              <div className={`${styles.statItem} ${styles.statError}`}>
+                <FontAwesomeIcon icon={faCircleExclamation} size="lg" />
+                <span className={styles.statValue}>{results.summary.errors}</span>
+                <span className={styles.statLabel}>Errors</span>
+              </div>
             </div>
 
-            <div className={`${styles.statItem} ${styles.statError}`}>
-              <FontAwesomeIcon icon={faCircleExclamation} size="lg" />
-              <span className={styles.statValue}>{results.summary.errors}</span>
-              <span className={styles.statLabel}>Errors</span>
+            <div className={styles.downloadReport}>
+              <PdfReport results={results} />
             </div>
           </div>
         </div>
@@ -316,8 +361,8 @@ function ResultsContent() {
                             className={styles.issueType}
                             style={{ color: issueStyle.color }}
                           >
-                            {issueStyle.label}
-                            {issue.impact && ` (${issue.impact} impact)`}
+                            {issue.type === 'error' ? 'Error' : 'Warning'}
+                            {issue.impact && ` (${issue.impact === 'high' ? 'High' : 'Medium'} Impact)`}
                           </span>
                           <span className={styles.issueCode}>{issue.code}</span>
                         </div>
@@ -369,8 +414,7 @@ function ResultsContent() {
                                   ))}
                                 {issue.nodes.length > 3 && (
                                   <p className={styles.moreElementsNote}>
-                                    + {issue.nodes.length - 3} more elements
-                                    with similar issues
+                                    + {issue.nodes.length - 3} more elements with similar issues
                                   </p>
                                 )}
                               </div>
@@ -384,15 +428,6 @@ function ResultsContent() {
               )}
             </div>
           ))}
-        </div>
-
-        <div className={styles.resultsActions}>
-          <div className={styles.actionButtons}>
-            <Link href="/" className={styles.backButton}>
-              Analyze Another Website
-            </Link>
-            <PdfReport results={results} />
-          </div>
         </div>
       </div>
     </div>

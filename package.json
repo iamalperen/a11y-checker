@@ -33,6 +33,7 @@
     "jspdf": "^3.0.1",
     "next": "15.0.1",
     "normalize.css": "8.0.1",
+    "pa11y": "^8.0.0",
     "react": "18",
     "react-axe": "^3.5.4",
     "react-dom": "18"

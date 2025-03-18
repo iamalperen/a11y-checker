@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import styles from '../page.module.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -39,6 +40,10 @@ interface AnalysisResults {
     formAccessibility: TestResult;
   };
 }
+
+type ErrorWithMessage = {
+  message: string;
+};
 
 // İssue türüne göre renk ve ikon belirleme fonksiyonu
 const getIssueStyles = (type: string) => {
@@ -138,8 +143,12 @@ export default function Results() {
 
         const data = await response.json();
         setResults(data);
-      } catch (err: any) {
-        setError(err.message || 'An error occurred during analysis');
+      } catch (err: unknown) {
+        const errorMessage = 
+          err instanceof Error 
+            ? err.message 
+            : 'An error occurred during analysis';
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -182,9 +191,9 @@ export default function Results() {
               size="2x"
             />
             <p>Sorry, we encountered an error: {error}</p>
-            <a href="/" className={styles.backButton}>
+            <Link href="/" className={styles.backButton}>
               Try Again
-            </a>
+            </Link>
           </div>
         </div>
       </div>
@@ -197,9 +206,9 @@ export default function Results() {
         <div className="container">
           <h1>No Results</h1>
           <p>No analysis results are available.</p>
-          <a href="/" className={styles.backButton}>
+          <Link href="/" className={styles.backButton}>
             Back to Home
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -308,9 +317,9 @@ export default function Results() {
         </div>
 
         <div className={styles.resultsActions}>
-          <a href="/" className={styles.backButton}>
+          <Link href="/" className={styles.backButton}>
             Analyze Another Website
-          </a>
+          </Link>
         </div>
       </div>
     </div>

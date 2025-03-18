@@ -2,7 +2,6 @@
 import '@testing-library/jest-dom';
 import { render, screen, fireEvent } from '@testing-library/react';
 import WebsiteInput from './WebsiteInput';
-import styles from './WebsiteInput.module.css';
 import { jest } from '@jest/globals';
 
 // Next.js useRouter hook'unu mock et

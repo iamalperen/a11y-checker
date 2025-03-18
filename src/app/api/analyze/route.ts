@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+interface AnalysisError {
+  message: string;
+  status: number;
+}
+
 // Erişilebilirlik kontrol araçları
 const accessibilityTools = {
   // Basit HTML yapısı kontrolü
@@ -191,7 +196,7 @@ export async function POST(request: NextRequest) {
     // URL doğrulama
     try {
       new URL(url);
-    } catch (error) {
+    } catch (_) {
       return NextResponse.json(
         { error: 'Invalid URL format' },
         { status: 400 }
@@ -208,9 +213,10 @@ export async function POST(request: NextRequest) {
           { status: response.status }
         );
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Network error';
       return NextResponse.json(
-        { error: `Network error: ${error.message}` },
+        { error: `Network error: ${errorMessage}` },
         { status: 500 }
       );
     }
@@ -243,7 +249,8 @@ export async function POST(request: NextRequest) {
     let total = 0;
 
     for (const test of Object.values(results.tests)) {
-      const testResult = test as any;
+      // TypeScript için tip güvenliği
+      const testResult = test as { passed: boolean; issues: { type: string }[] };
       total += testResult.issues.length;
 
       for (const issue of testResult.issues) {
@@ -256,18 +263,21 @@ export async function POST(request: NextRequest) {
     }
 
     results.summary = {
-      passed: Object.values(results.tests).filter((test: any) => test.passed)
-        .length,
+      passed: Object.values(results.tests).filter((test: unknown) => {
+        const testObj = test as { passed: boolean };
+        return testObj.passed;
+      }).length,
       warnings,
       errors,
       total,
     };
 
     return NextResponse.json(results);
-  } catch (error: any) {
-    console.error('Error in accessibility analysis:', error);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+    console.error('Error in accessibility analysis:', errorMessage);
     return NextResponse.json(
-      { error: `Internal server error: ${error.message}` },
+      { error: `Internal server error: ${errorMessage}` },
       { status: 500 }
     );
   }

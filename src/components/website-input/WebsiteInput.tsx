@@ -33,7 +33,7 @@ export default function WebsiteInput() {
     try {
       const url = new URL(urlString);
       return url.protocol === 'http:' || url.protocol === 'https:';
-    } catch (e) {
+    } catch (_) {
       return false;
     }
   };

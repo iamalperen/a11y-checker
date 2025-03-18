@@ -2,35 +2,134 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
+  padding: 1rem 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  background-color: var(--background-color);
 }
 
 .headerContainer {
   align-items: center;
   display: flex;
   justify-content: space-between;
-  padding: 1rem;
+  width: 100%;
 }
 
 .logo {
   display: flex;
   gap: 0.5rem;
   align-items: center;
-  justify-content: center;
   font-size: 1.5rem;
   font-weight: bold;
+  color: var(--text-color);
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.logo:hover {
+  opacity: 0.8;
+}
+
+.logoIcon {
+  font-size: 1.75rem;
+}
+
+.navbar {
+  display: flex;
+  justify-content: center;
+  flex: 1;
+  margin: 0 2rem;
+}
+
+.navMenu {
+  display: flex;
+  list-style: none;
+  gap: 1.5rem;
+  margin: 0;
+  padding: 0;
+}
+
+.navItem {
+  display: flex;
+}
+
+.navLink {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-color);
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  transition: all 0.2s ease;
+}
+
+.navLink:hover {
+  background-color: var(--hover-overlay);
+}
+
+[data-theme='dark'] .navLink:hover {
+  background-color: var(--hover-overlay);
+}
+
+.navIcon {
+  font-size: 1rem;
 }
 
 .themeSwitcher {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  padding: 1.25rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0.5rem;
   background: none;
-  border: none;
-  font-size: 1.5rem;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  font-size: 1.25rem;
   cursor: pointer;
   color: var(--text-color);
+  transition: all 0.2s ease;
+}
+
+.themeSwitcher:hover {
+  background-color: var(--hover-overlay);
+}
+
+[data-theme='dark'] .themeSwitcher:hover {
+  background-color: var(--hover-overlay);
+}
+
+/* Responsive design - mobile menu */
+@media (max-width: 768px) {
+  .navbar {
+    margin: 0 1rem;
+  }
+
+  .navMenu {
+    gap: 0.75rem;
+  }
+
+  .navLink span {
+    display: none;
+  }
+
+  .navIcon {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .logoText {
+    display: none;
+  }
+
+  .logo {
+    font-size: 1.25rem;
+  }
+
+  .logoIcon {
+    font-size: 1.5rem;
+  }
 }

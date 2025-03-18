@@ -1,12 +1,46 @@
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #212121;
+
+  /* Ana renk paleti - styles/globals.css ile uyumlu */
+  --color-primary: #5755ee;
+  --color-primary-hover: #4340d4;
+  --color-primary-light: #a5a6f6;
+  --color-secondary: #8954e8;
+
+  /* Fonksiyonel renkler */
+  --color-error: #d32f2f;
+  --color-success: #2e7d32;
+  --color-warning: #ed6c02;
+  --color-info: #0288d1;
+
+  /* Ek tema renkleri */
+  --border-color: #e0e0e0;
+  --input-border: rgba(0, 0, 0, 0.15);
+  --placeholder-color: rgba(0, 0, 0, 0.45);
+  --hover-overlay: rgba(0, 0, 0, 0.05);
+  --input-background: #ffffff;
+  --input-background-focus: #ffffff;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #1f1b36;
+    --foreground: #ffffff;
+
+    /* Fonksiyonel renklerin koyu tema versiyonları */
+    --color-primary: #7f7ef2;
+    --color-primary-hover: #9e9df5;
+    --color-primary-light: #b4b3f8;
+    --color-secondary: #a571f5;
+
+    /* Koyu tema için ek renkler */
+    --border-color: #473f72;
+    --input-border: rgba(255, 255, 255, 0.2);
+    --placeholder-color: rgba(255, 255, 255, 0.55);
+    --hover-overlay: rgba(255, 255, 255, 0.1);
+    --input-background: #2c2750;
+    --input-background-focus: #322c5c;
   }
 }
 

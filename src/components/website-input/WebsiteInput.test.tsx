@@ -8,7 +8,7 @@ describe('WebsiteInput Component', () => {
     render(<WebsiteInput />);
 
     // Check if the input field is rendered
-    const input = screen.getByPlaceholderText('Enter website URL');
+    const input = screen.getByPlaceholderText('https://example.com');
     expect(input).toBeInTheDocument();
 
     // Check if the button is rendered
@@ -19,7 +19,7 @@ describe('WebsiteInput Component', () => {
   it('allows user to enter text in input field', () => {
     render(<WebsiteInput />);
 
-    const input = screen.getByPlaceholderText('Enter website URL');
+    const input = screen.getByPlaceholderText('https://example.com');
     fireEvent.change(input, { target: { value: 'https://example.com' } });
 
     expect(input).toHaveValue('https://example.com');
@@ -32,7 +32,7 @@ describe('WebsiteInput Component', () => {
         <input
           type="text"
           className={styles.input}
-          placeholder="Enter website URL"
+          placeholder="https://example.com"
         />
         <button className={styles.button} onClick={handleClick}>
           Analyze

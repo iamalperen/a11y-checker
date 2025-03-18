@@ -2,14 +2,45 @@
 @import '@fortawesome/fontawesome-svg-core/styles.css';
 
 :root {
-  --background-color: #fff;
-  --text-color: #000;
+  /* Ana renk paleti */
+  --color-primary: #5755ee;
+  --color-primary-hover: #4340d4;
+  --color-primary-light: #a5a6f6;
+  --color-secondary: #8954e8;
+
+  /* Fonksiyonel renkler */
+  --color-error: #d32f2f;
+  --color-success: #2e7d32;
+  --color-warning: #ed6c02;
+  --color-info: #0288d1;
+
+  /* Tema renkleri */
+  --background-color: #ffffff;
+  --text-color: #212121;
+  --border-color: #e0e0e0;
+  --input-border: rgba(0, 0, 0, 0.15);
+  --placeholder-color: rgba(0, 0, 0, 0.45);
+  --hover-overlay: rgba(0, 0, 0, 0.05);
+  --input-background: #ffffff;
+  --input-background-focus: #ffffff;
 }
 
 [data-theme='dark'] {
-  --background-color: #3b3363;
-  --text-color: #fff;
-  ---border-color: #473f72;
+  /* Tema renkleri - koyu mod */
+  --background-color: #1f1b36;
+  --text-color: #ffffff;
+  --border-color: #473f72;
+  --input-border: rgba(255, 255, 255, 0.2);
+  --placeholder-color: rgba(255, 255, 255, 0.55);
+  --hover-overlay: rgba(255, 255, 255, 0.1);
+  --input-background: #2c2750;
+  --input-background-focus: #322c5c;
+
+  /* Fonksiyonel renklerin koyu tema versiyonları */
+  --color-primary: #7f7ef2;
+  --color-primary-hover: #9e9df5;
+  --color-primary-light: #b4b3f8;
+  --color-secondary: #a571f5;
 }
 
 * {
@@ -23,7 +54,7 @@ body,
 html {
   background-color: var(--background-color);
   color: var(--text-color);
-  border-color: #473f72;
+  border-color: var(--border-color);
   height: 100%;
   width: 100%;
 }

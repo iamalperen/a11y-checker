@@ -8,7 +8,7 @@ export default function Home() {
         <h1>Check Accessibility of Your Website</h1>
         <p className={styles.description}>
           Enter your website URL below to analyze its accessibility and get
-          recommendations.
+          recommendations. Our enhanced analyzer now includes color contrast checking and advanced ARIA validation to help you meet WCAG standards.
         </p>
         <WebsiteInput />
       </div>

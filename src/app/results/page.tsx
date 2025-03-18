@@ -36,6 +36,7 @@ interface AnalysisResults {
   tests: {
     htmlStructure: TestResult;
     ariaUsage: TestResult;
+    colorContrast: TestResult;
     keyboardAccessibility: TestResult;
     formAccessibility: TestResult;
   };
@@ -76,6 +77,8 @@ const getTestName = (testKey: string) => {
       return 'HTML Structure';
     case 'ariaUsage':
       return 'ARIA Implementation';
+    case 'colorContrast':
+      return 'Color Contrast';
     case 'keyboardAccessibility':
       return 'Keyboard Accessibility';
     case 'formAccessibility':
@@ -96,6 +99,18 @@ const getSuggestion = (code: string) => {
       'Remove redundant ARIA roles that duplicate the semantic meaning of HTML elements.',
     'aria-valid-reference':
       'Ensure all aria-labelledby and aria-describedby attributes reference valid element IDs.',
+    'aria-deprecated-role':
+      'Use current ARIA roles instead of deprecated ones. Check the WAI-ARIA specification for appropriate alternatives.',
+    'aria-empty-value':
+      'Provide a valid value for the ARIA attribute. Empty ARIA attributes are ignored by screen readers.',
+    'aria-hidden-interactive':
+      'Remove aria-hidden="true" from interactive elements, or make them non-interactive.',
+    'aria-required-context':
+      'Ensure that elements with ARIA roles are used within the appropriate parent contexts as required by the WAI-ARIA specification.',
+    'color-contrast':
+      'Ensure text has sufficient contrast against its background. The WCAG AA standard requires a contrast ratio of at least 4.5:1 for normal text and 3:1 for large text.',
+    'color-contrast-info':
+      'For accurate color contrast analysis, use a dedicated tool like the WebAIM Color Contrast Checker or axe DevTools.',
     'tabindex-positive':
       'Avoid positive tabindex values. Use the natural document order or tabindex="0" for interactive elements.',
     'keyboard-event-handler':

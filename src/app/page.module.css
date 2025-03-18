@@ -538,6 +538,13 @@ a.secondary {
   margin: 2rem 0;
 }
 
+.actionButtons {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
 /* Responsive styles for results page */
 @media (min-width: 768px) {
   .resultsSummary {
@@ -568,5 +575,12 @@ a.secondary {
   .statValue {
     margin: 0 0.75rem;
     font-size: 1.5rem;
+  }
+
+  .actionButtons {
+    flex-direction: column;
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
   }
 }

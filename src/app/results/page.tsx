@@ -11,6 +11,7 @@ import {
   faCircleExclamation,
   faSpinner,
 } from '@fortawesome/free-solid-svg-icons';
+import PdfReport from '@/components/pdf-report/PdfReport';
 
 // TypeScript definitions for result types
 interface AnalysisIssue {
@@ -332,9 +333,12 @@ export default function Results() {
         </div>
 
         <div className={styles.resultsActions}>
-          <Link href="/" className={styles.backButton}>
-            Analyze Another Website
-          </Link>
+          <div className={styles.actionButtons}>
+            <Link href="/" className={styles.backButton}>
+              Analyze Another Website
+            </Link>
+            <PdfReport results={results} />
+          </div>
         </div>
       </div>
     </div>

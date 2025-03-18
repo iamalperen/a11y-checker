@@ -1,10 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-interface AnalysisError {
-  message: string;
-  status: number;
-}
-
 // Accessibility checking tools
 const accessibilityTools = {
   // Simple HTML structure check
@@ -66,7 +60,7 @@ const accessibilityTools = {
     // ARIA Roles
     const elementsWithRole =
       html.match(/<[^>]*role=["'][^"']*["'][^>]*>/g) || [];
-    
+
     // List of invalid or deprecated ARIA roles
     const deprecatedRoles = [
       'dialog', // should use alertdialog or dialog instead
@@ -77,22 +71,22 @@ const accessibilityTools = {
 
     // Redundant roles for semantic HTML elements
     const redundantRoleMappings = {
-      'button': 'button',
-      'a': 'link',
-      'nav': 'navigation',
-      'header': 'banner',
-      'footer': 'contentinfo',
-      'main': 'main',
-      'aside': 'complementary',
+      button: 'button',
+      a: 'link',
+      nav: 'navigation',
+      header: 'banner',
+      footer: 'contentinfo',
+      main: 'main',
+      aside: 'complementary',
       'input[type="checkbox"]': 'checkbox',
       'input[type="radio"]': 'radio',
       'input[type="search"]': 'searchbox',
-      'form': 'form',
-      'table': 'table',
-      'ul': 'list',
-      'ol': 'list',
-      'select': 'listbox',
-      'details': 'disclosure'
+      form: 'form',
+      table: 'table',
+      ul: 'list',
+      ol: 'list',
+      select: 'listbox',
+      details: 'disclosure',
     };
 
     for (const element of elementsWithRole) {
@@ -110,7 +104,9 @@ const accessibilityTools = {
         }
 
         // Check for redundant roles
-        for (const [tag, expectedRole] of Object.entries(redundantRoleMappings)) {
+        for (const [tag, expectedRole] of Object.entries(
+          redundantRoleMappings
+        )) {
           if (element.includes(`<${tag}`) && role === expectedRole) {
             issues.push({
               type: 'warning',
@@ -144,7 +140,8 @@ const accessibilityTools = {
 
       // aria-labelledby and aria-describedby ID references
       if (
-        (attributeName === 'aria-labelledby' || attributeName === 'aria-describedby') &&
+        (attributeName === 'aria-labelledby' ||
+          attributeName === 'aria-describedby') &&
         !html.includes(`id="${value}"`)
       ) {
         issues.push({
@@ -175,31 +172,32 @@ const accessibilityTools = {
     // ARIA required context checks
     // Some ARIA roles require a specific parent role
     const roleContextRequirements: Record<string, string[]> = {
-      'option': ['listbox', 'combobox'],
-      'menuitem': ['menu', 'menubar'],
-      'listitem': ['list'],
-      'row': ['grid', 'rowgroup', 'table', 'treegrid'],
-      'gridcell': ['row'],
+      option: ['listbox', 'combobox'],
+      menuitem: ['menu', 'menubar'],
+      listitem: ['list'],
+      row: ['grid', 'rowgroup', 'table', 'treegrid'],
+      gridcell: ['row'],
     };
 
-    const elementsWithSpecificRoles = html.match(/<[^>]*role=["']([^"']*)["'][^>]*>/g) || [];
-    
+    const elementsWithSpecificRoles =
+      html.match(/<[^>]*role=["']([^"']*)["'][^>]*>/g) || [];
+
     for (const element of elementsWithSpecificRoles) {
       const roleMatch = element.match(/role=["']([^"']*)["']/);
       if (roleMatch && roleMatch[1]) {
         const role = roleMatch[1];
-        
+
         if (role in roleContextRequirements) {
           // This regex is very simple, a more sophisticated approach would be needed in a real application
           let hasValidParent = false;
-          
+
           for (const parentRole of roleContextRequirements[role]) {
             if (html.includes(`role="${parentRole}"`)) {
               hasValidParent = true;
               break;
             }
           }
-          
+
           if (!hasValidParent) {
             issues.push({
               type: 'warning',
@@ -226,7 +224,8 @@ const accessibilityTools = {
     const inlineStyles = html.match(/style=["']([^"']*)["']/g) || [];
 
     // Regex for color definitions
-    const colorRegex = /(#[0-9A-Fa-f]{3,8}|rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)|rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*[\d.]+\s*\)|hsl\(\s*\d+\s*,\s*\d+%?\s*,\s*\d+%?\s*\)|black|white|gray|red|green|blue|yellow|purple|orange|pink|brown)/g;
+    const colorRegex =
+      /(#[0-9A-Fa-f]{3,8}|rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)|rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*[\d.]+\s*\)|hsl\(\s*\d+\s*,\s*\d+%?\s*,\s*\d+%?\s*\)|black|white|gray|red|green|blue|yellow|purple|orange|pink|brown)/g;
 
     // Convert Hex color to RGB
     const hexToRgb = (hex: string) => {
@@ -234,39 +233,42 @@ const accessibilityTools = {
       if (hex.length === 4) {
         hex = '#' + hex[1] + hex[1] + hex[2] + hex[2] + hex[3] + hex[3];
       }
-      
+
       const r = parseInt(hex.substring(1, 3), 16);
       const g = parseInt(hex.substring(3, 5), 16);
       const b = parseInt(hex.substring(5, 7), 16);
-      
+
       return { r, g, b };
     };
 
     // Calculate color contrast ratio (WCAG formula)
-    const calculateContrast = (rgb1: {r: number, g: number, b: number}, rgb2: {r: number, g: number, b: number}) => {
+    const calculateContrast = (
+      rgb1: { r: number; g: number; b: number },
+      rgb2: { r: number; g: number; b: number }
+    ) => {
       // Calculate relative luminance
       const luminance1 = calculateLuminance(rgb1);
       const luminance2 = calculateLuminance(rgb2);
-      
+
       // Contrast ratio = (L1 + 0.05) / (L2 + 0.05) with L1 > L2
       const lighter = Math.max(luminance1, luminance2);
       const darker = Math.min(luminance1, luminance2);
-      
+
       return (lighter + 0.05) / (darker + 0.05);
     };
 
     // Calculate relative luminance (WCAG formula)
-    const calculateLuminance = (rgb: {r: number, g: number, b: number}) => {
+    const calculateLuminance = (rgb: { r: number; g: number; b: number }) => {
       // Normalize sRGB values
       let r = rgb.r / 255;
       let g = rgb.g / 255;
       let b = rgb.b / 255;
-      
+
       // Apply gamma correction
       r = r <= 0.03928 ? r / 12.92 : Math.pow((r + 0.055) / 1.055, 2.4);
       g = g <= 0.03928 ? g / 12.92 : Math.pow((g + 0.055) / 1.055, 2.4);
       b = b <= 0.03928 ? b / 12.92 : Math.pow((b + 0.055) / 1.055, 2.4);
-      
+
       // Calculate weighted luminance
       return 0.2126 * r + 0.7152 * g + 0.0722 * b;
     };
@@ -279,12 +281,12 @@ const accessibilityTools = {
 
     // Extract colors from CSS
     let allColors: string[] = [];
-    
+
     styleBlocks.forEach((styleBlock) => {
       const innerCss = styleBlock.replace(/<style[^>]*>|<\/style>/g, '');
       allColors = [...allColors, ...extractColors(innerCss)];
     });
-    
+
     inlineStyles.forEach((inlineStyle) => {
       const styleContent = inlineStyle.replace(/style=["']|["']/g, '');
       allColors = [...allColors, ...extractColors(styleContent)];
@@ -299,16 +301,16 @@ const accessibilityTools = {
       // Let's sample - first 10 color combinations
       for (let i = 0; i < Math.min(10, uniqueColors.length); i++) {
         for (let j = i + 1; j < Math.min(10, uniqueColors.length); j++) {
-          let color1 = uniqueColors[i];
-          let color2 = uniqueColors[j];
-          
+          const color1 = uniqueColors[i];
+          const color2 = uniqueColors[j];
+
           // Simple sampling - only hex colors
           if (color1.startsWith('#') && color2.startsWith('#')) {
             const rgb1 = hexToRgb(color1);
             const rgb2 = hexToRgb(color2);
-            
+
             const contrastRatio = calculateContrast(rgb1, rgb2);
-            
+
             // WCAG 2.1 AA Level: 4.5:1 for normal text, 3:1 for large text
             if (contrastRatio < 4.5) {
               issues.push({
@@ -326,13 +328,14 @@ const accessibilityTools = {
     if (uniqueColors.length > 0) {
       issues.push({
         type: 'info',
-        message: 'Color contrast analysis is limited. For accurate results, use tools like the WebAIM Color Contrast Checker or Axe for direct testing.',
+        message:
+          'Color contrast analysis is limited. For accurate results, use tools like the WebAIM Color Contrast Checker or Axe for direct testing.',
         code: 'color-contrast-info',
       });
     }
 
     return {
-      passed: issues.filter(issue => issue.type !== 'info').length === 0,
+      passed: issues.filter((issue) => issue.type !== 'info').length === 0,
       issues,
     };
   },
@@ -450,7 +453,8 @@ export async function POST(request: NextRequest) {
         );
       }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Network error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Network error';
       return NextResponse.json(
         { error: `Network error: ${errorMessage}` },
         { status: 500 }
@@ -487,7 +491,10 @@ export async function POST(request: NextRequest) {
 
     for (const test of Object.values(results.tests)) {
       // Type safety for TypeScript
-      const testResult = test as { passed: boolean; issues: { type: string }[] };
+      const testResult = test as {
+        passed: boolean;
+        issues: { type: string }[];
+      };
       total += testResult.issues.length;
 
       for (const issue of testResult.issues) {
@@ -511,7 +518,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(results);
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Internal server error';
     console.error('Error in accessibility analysis:', errorMessage);
     return NextResponse.json(
       { error: `Internal server error: ${errorMessage}` },

@@ -11,12 +11,22 @@ import {
   faCircleExclamation,
   faSpinner,
 } from '@fortawesome/free-solid-svg-icons';
+import PdfReport from '@/components/pdf-report/PdfReport';
 
 // TypeScript definitions for result types
 interface AnalysisIssue {
-  type: 'error' | 'warning';
+  type: 'error' | 'warning' | 'info';
   message: string;
   code: string;
+  description?: string;
+  helpUrl?: string;
+  impact?: string;
+  nodes?: Array<{
+    html: string;
+    failureSummary?: string;
+    impact?: string;
+    target?: string[];
+  }>;
 }
 
 interface TestResult {
@@ -159,9 +169,9 @@ export default function Results() {
         const data = await response.json();
         setResults(data);
       } catch (err: unknown) {
-        const errorMessage = 
-          err instanceof Error 
-            ? err.message 
+        const errorMessage =
+          err instanceof Error
+            ? err.message
             : 'An error occurred during analysis';
         setError(errorMessage);
       } finally {
@@ -311,16 +321,65 @@ export default function Results() {
                             style={{ color: issueStyle.color }}
                           >
                             {issueStyle.label}
+                            {issue.impact && ` (${issue.impact} impact)`}
                           </span>
                           <span className={styles.issueCode}>{issue.code}</span>
                         </div>
 
                         <div className={styles.issueContent}>
                           <p className={styles.issueMessage}>{issue.message}</p>
+                          {issue.description && (
+                            <p className={styles.issueDescription}>
+                              {issue.description}
+                            </p>
+                          )}
                           <div className={styles.issueSuggestion}>
                             <h4>Suggested Fix:</h4>
                             <p>{getSuggestion(issue.code)}</p>
+                            {issue.helpUrl && (
+                              <p className={styles.helpLink}>
+                                <a
+                                  href={issue.helpUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  Learn more about this issue
+                                </a>
+                              </p>
+                            )}
                           </div>
+
+                          {issue.nodes && issue.nodes.length > 0 && (
+                            <div className={styles.affectedElements}>
+                              <h4>Affected Elements ({issue.nodes.length}):</h4>
+                              <div className={styles.elementsContainer}>
+                                {issue.nodes
+                                  .slice(0, 3)
+                                  .map((node, nodeIndex) => (
+                                    <div
+                                      key={nodeIndex}
+                                      className={styles.elementItem}
+                                    >
+                                      <code className={styles.htmlCode}>
+                                        {node.html}
+                                      </code>
+                                      {node.failureSummary && (
+                                        <div className={styles.failureSummary}>
+                                          <strong>Failure Summary:</strong>
+                                          <pre>{node.failureSummary}</pre>
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                {issue.nodes.length > 3 && (
+                                  <p className={styles.moreElementsNote}>
+                                    + {issue.nodes.length - 3} more elements
+                                    with similar issues
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     );
@@ -332,9 +391,12 @@ export default function Results() {
         </div>
 
         <div className={styles.resultsActions}>
-          <Link href="/" className={styles.backButton}>
-            Analyze Another Website
-          </Link>
+          <div className={styles.actionButtons}>
+            <Link href="/" className={styles.backButton}>
+              Analyze Another Website
+            </Link>
+            <PdfReport results={results} />
+          </div>
         </div>
       </div>
     </div>

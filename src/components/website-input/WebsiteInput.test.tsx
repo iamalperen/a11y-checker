@@ -1,13 +1,28 @@
-/// <reference types="jest" />
+/**
+ * @jest-environment jsdom
+ */
+
+import { describe, it, jest, expect } from '@jest/globals';
 import '@testing-library/jest-dom';
 import { render, screen, fireEvent } from '@testing-library/react';
 import WebsiteInput from './WebsiteInput';
-import { jest } from '@jest/globals';
 
-// Mock the Next.js useRouter hook
+// Extend Jest matchers
+declare global {
+  namespace jest {
+    interface Matchers<R> {
+      toBeInTheDocument(): R;
+      toHaveValue(value: string): R;
+    }
+  }
+}
+
+// Mock the Next.js router
 jest.mock('next/navigation', () => ({
   useRouter: () => ({
     push: jest.fn(),
+    prefetch: jest.fn(),
+    replace: jest.fn(),
   }),
 }));
 
@@ -43,8 +58,8 @@ describe('WebsiteInput Component', () => {
     fireEvent.change(input, { target: { value: 'invalid-url' } });
     fireEvent.click(button);
 
-    // Check error message
-    const errorMessage = screen.getByText(/Please enter a valid URL/i);
+    // Check error message - use the exact text from the component
+    const errorMessage = screen.getByText('Please enter a valid URL (e.g., https://example.com)');
     expect(errorMessage).toBeInTheDocument();
   });
 });

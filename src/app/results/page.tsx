@@ -12,7 +12,7 @@ import {
   faSpinner,
 } from '@fortawesome/free-solid-svg-icons';
 
-// Sonuç tipleri için TypeScript tanımlamaları
+// TypeScript definitions for result types
 interface AnalysisIssue {
   type: 'error' | 'warning';
   message: string;
@@ -46,7 +46,7 @@ type ErrorWithMessage = {
   message: string;
 };
 
-// İssue türüne göre renk ve ikon belirleme fonksiyonu
+// Function to determine color and icon based on issue type
 const getIssueStyles = (type: string) => {
   switch (type) {
     case 'error':
@@ -70,7 +70,7 @@ const getIssueStyles = (type: string) => {
   }
 };
 
-// Test başlıklarını daha anlaşılır hale getiren yardımcı fonksiyon
+// Helper function to make test names more readable
 const getTestName = (testKey: string) => {
   switch (testKey) {
     case 'htmlStructure':
@@ -88,7 +88,7 @@ const getTestName = (testKey: string) => {
   }
 };
 
-// İssue çözüm önerileri
+// Issue resolution suggestions
 const getSuggestion = (code: string) => {
   const suggestions: Record<string, string> = {
     'heading-order':
@@ -229,7 +229,7 @@ export default function Results() {
     );
   }
 
-  // Sonuçları görüntülemek için uygun bileşeni oluştur
+  // Create appropriate component to display results
   return (
     <div className={styles.page}>
       <div className="container">

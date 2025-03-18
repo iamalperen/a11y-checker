@@ -5,20 +5,20 @@ interface AnalysisError {
   status: number;
 }
 
-// Erişilebilirlik kontrol araçları
+// Accessibility checking tools
 const accessibilityTools = {
-  // Basit HTML yapısı kontrolü
+  // Simple HTML structure check
   htmlStructure: async (html: string) => {
     const issues = [];
 
-    // Heading seviyelerini kontrol et (h1-h6 hiyerarşisi)
+    // Check heading levels (h1-h6 hierarchy)
     const headings = html.match(/<h[1-6][^>]*>(.*?)<\/h[1-6]>/g) || [];
     let previousLevel = 0;
 
     for (const heading of headings) {
       const level = parseInt(heading.match(/<h([1-6])/)?.[1] || '0');
 
-      // H1 kontrolü
+      // H1 check
       if (level === 1 && previousLevel === 1) {
         issues.push({
           type: 'error',
@@ -28,7 +28,7 @@ const accessibilityTools = {
         });
       }
 
-      // Heading sırası kontrolü
+      // Heading order check
       if (level > previousLevel && level - previousLevel > 1) {
         issues.push({
           type: 'warning',
@@ -40,7 +40,7 @@ const accessibilityTools = {
       previousLevel = level;
     }
 
-    // Alt etiketleri kontrol et
+    // Check alt tags
     const images = html.match(/<img[^>]*>/g) || [];
     for (const img of images) {
       if (!img.includes('alt=')) {
@@ -59,23 +59,23 @@ const accessibilityTools = {
     };
   },
 
-  // ARIA kullanımı kontrolü - Geliştirilmiş
+  // ARIA usage check - Enhanced
   ariaUsage: async (html: string) => {
     const issues = [];
 
-    // ARIA Roller
+    // ARIA Roles
     const elementsWithRole =
       html.match(/<[^>]*role=["'][^"']*["'][^>]*>/g) || [];
     
-    // Geçersiz veya kullanımdan kaldırılmış ARIA rolleri listesi
+    // List of invalid or deprecated ARIA roles
     const deprecatedRoles = [
-      'dialog', // dialog yerine alertdialog veya dialog kullanılmalı
-      'menu', // menü öğeleri için yeterli değil
-      'menuitem', // menü öğeleri için yeterli değil
-      'toolbar', // daha iyi alternatifler var
+      'dialog', // should use alertdialog or dialog instead
+      'menu', // not sufficient for menu items
+      'menuitem', // not sufficient for menu items
+      'toolbar', // better alternatives exist
     ];
 
-    // Semantik HTML elemanları için gereksiz roller
+    // Redundant roles for semantic HTML elements
     const redundantRoleMappings = {
       'button': 'button',
       'a': 'link',
@@ -100,7 +100,7 @@ const accessibilityTools = {
       if (roleMatch && roleMatch[1]) {
         const role = roleMatch[1];
 
-        // Kullanımdan kaldırılmış rolleri kontrol et
+        // Check for deprecated roles
         if (deprecatedRoles.includes(role)) {
           issues.push({
             type: 'warning',
@@ -109,7 +109,7 @@ const accessibilityTools = {
           });
         }
 
-        // Gereksiz rolleri kontrol et
+        // Check for redundant roles
         for (const [tag, expectedRole] of Object.entries(redundantRoleMappings)) {
           if (element.includes(`<${tag}`) && role === expectedRole) {
             issues.push({
@@ -123,17 +123,17 @@ const accessibilityTools = {
       }
     }
 
-    // ARIA attribute kontrolleri
+    // ARIA attribute checks
     const ariaAttributes = [
       ...html.matchAll(/aria-[a-z]+=["|']([^"|']*)["|']/g),
     ];
 
-    // Tüm ARIA durumlarını ve özelliklerini kontrol et
+    // Check all ARIA states and properties
     for (const match of ariaAttributes) {
       const [fullMatch, value] = match;
       const attributeName = fullMatch.split('=')[0];
 
-      // Boş ARIA değerleri
+      // Empty ARIA values
       if (!value || value.trim() === '') {
         issues.push({
           type: 'error',
@@ -142,7 +142,7 @@ const accessibilityTools = {
         });
       }
 
-      // aria-labelledby ve aria-describedby ID referansları
+      // aria-labelledby and aria-describedby ID references
       if (
         (attributeName === 'aria-labelledby' || attributeName === 'aria-describedby') &&
         !html.includes(`id="${value}"`)
@@ -154,7 +154,7 @@ const accessibilityTools = {
         });
       }
 
-      // aria-hidden="true" ile interaktif elementler
+      // aria-hidden="true" with interactive elements
       if (
         attributeName === 'aria-hidden' &&
         value === 'true' &&
@@ -172,8 +172,8 @@ const accessibilityTools = {
       }
     }
 
-    // ARIA required context kontrolleri
-    // Bazı ARIA rolleri özel bir parent role gerektirir
+    // ARIA required context checks
+    // Some ARIA roles require a specific parent role
     const roleContextRequirements: Record<string, string[]> = {
       'option': ['listbox', 'combobox'],
       'menuitem': ['menu', 'menubar'],
@@ -190,7 +190,7 @@ const accessibilityTools = {
         const role = roleMatch[1];
         
         if (role in roleContextRequirements) {
-          // Bu regex çok basit, gerçek uygulamada daha sofistike bir yaklaşım gerekir
+          // This regex is very simple, a more sophisticated approach would be needed in a real application
           let hasValidParent = false;
           
           for (const parentRole of roleContextRequirements[role]) {
@@ -217,20 +217,20 @@ const accessibilityTools = {
     };
   },
 
-  // Renk kontrast analizi
+  // Color contrast analysis
   colorContrast: async (html: string) => {
     const issues = [];
 
-    // CSS tanımlamalarını çıkar
+    // Extract CSS definitions
     const styleBlocks = html.match(/<style[^>]*>([\s\S]*?)<\/style>/g) || [];
     const inlineStyles = html.match(/style=["']([^"']*)["']/g) || [];
 
-    // Renk tanımları için regex
+    // Regex for color definitions
     const colorRegex = /(#[0-9A-Fa-f]{3,8}|rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)|rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*[\d.]+\s*\)|hsl\(\s*\d+\s*,\s*\d+%?\s*,\s*\d+%?\s*\)|black|white|gray|red|green|blue|yellow|purple|orange|pink|brown)/g;
 
-    // Hex renk kodunu RGB'ye çevir
+    // Convert Hex color to RGB
     const hexToRgb = (hex: string) => {
-      // #RGB formatını #RRGGBB'ye genişlet
+      // Expand #RGB format to #RRGGBB
       if (hex.length === 4) {
         hex = '#' + hex[1] + hex[1] + hex[2] + hex[2] + hex[3] + hex[3];
       }
@@ -242,42 +242,42 @@ const accessibilityTools = {
       return { r, g, b };
     };
 
-    // Renk kontrast oranı hesapla (WCAG formülü)
+    // Calculate color contrast ratio (WCAG formula)
     const calculateContrast = (rgb1: {r: number, g: number, b: number}, rgb2: {r: number, g: number, b: number}) => {
-      // Göreceli parlaklık hesapla
+      // Calculate relative luminance
       const luminance1 = calculateLuminance(rgb1);
       const luminance2 = calculateLuminance(rgb2);
       
-      // Kontrast oranı = (L1 + 0.05) / (L2 + 0.05) with L1 > L2
+      // Contrast ratio = (L1 + 0.05) / (L2 + 0.05) with L1 > L2
       const lighter = Math.max(luminance1, luminance2);
       const darker = Math.min(luminance1, luminance2);
       
       return (lighter + 0.05) / (darker + 0.05);
     };
 
-    // Göreceli parlaklık hesapla (WCAG formülü)
+    // Calculate relative luminance (WCAG formula)
     const calculateLuminance = (rgb: {r: number, g: number, b: number}) => {
-      // sRGB değerlerini normalize et
+      // Normalize sRGB values
       let r = rgb.r / 255;
       let g = rgb.g / 255;
       let b = rgb.b / 255;
       
-      // Gamma düzeltmesi uygula
+      // Apply gamma correction
       r = r <= 0.03928 ? r / 12.92 : Math.pow((r + 0.055) / 1.055, 2.4);
       g = g <= 0.03928 ? g / 12.92 : Math.pow((g + 0.055) / 1.055, 2.4);
       b = b <= 0.03928 ? b / 12.92 : Math.pow((b + 0.055) / 1.055, 2.4);
       
-      // Ağırlıklı parlaklık hesapla
+      // Calculate weighted luminance
       return 0.2126 * r + 0.7152 * g + 0.0722 * b;
     };
 
-    // Basitleştirilmiş renk çıkarma
+    // Simplified color extraction
     const extractColors = (cssText: string): string[] => {
       const colors = cssText.match(colorRegex) || [];
       return colors;
     };
 
-    // CSS içindeki renkleri çıkar
+    // Extract colors from CSS
     let allColors: string[] = [];
     
     styleBlocks.forEach((styleBlock) => {
@@ -290,26 +290,26 @@ const accessibilityTools = {
       allColors = [...allColors, ...extractColors(styleContent)];
     });
 
-    // Renkleri benzersiz hale getir
+    // Make colors unique
     const uniqueColors = [...new Set(allColors)];
 
-    // Renkleri ikili olarak kontrol et
-    // NOT: Bu çok basit bir yaklaşım, gerçek dünyada CSS seçicileri ve yapıyı daha detaylı analiz etmek gerekir
+    // Check colors in pairs
+    // NOTE: This is a very simplified approach, in the real world you would need to analyze CSS selectors and structure in more detail
     if (uniqueColors.length >= 2) {
-      // Örnekleme yapalım - ilk 10 renk kombinasyonu
+      // Let's sample - first 10 color combinations
       for (let i = 0; i < Math.min(10, uniqueColors.length); i++) {
         for (let j = i + 1; j < Math.min(10, uniqueColors.length); j++) {
           let color1 = uniqueColors[i];
           let color2 = uniqueColors[j];
           
-          // Basit bir örnekleme - sadece hex renkleri
+          // Simple sampling - only hex colors
           if (color1.startsWith('#') && color2.startsWith('#')) {
             const rgb1 = hexToRgb(color1);
             const rgb2 = hexToRgb(color2);
             
             const contrastRatio = calculateContrast(rgb1, rgb2);
             
-            // WCAG 2.1 AA Seviyesi: Normal metin için 4.5:1, büyük metin için 3:1
+            // WCAG 2.1 AA Level: 4.5:1 for normal text, 3:1 for large text
             if (contrastRatio < 4.5) {
               issues.push({
                 type: 'warning',
@@ -322,7 +322,7 @@ const accessibilityTools = {
       }
     }
 
-    // Önemli uyarı
+    // Important note
     if (uniqueColors.length > 0) {
       issues.push({
         type: 'info',
@@ -337,11 +337,11 @@ const accessibilityTools = {
     };
   },
 
-  // Keyboard erişilebilirlik kontrolü
+  // Keyboard accessibility check
   keyboardAccessibility: async (html: string) => {
     const issues = [];
 
-    // tabindex kontrolü
+    // tabindex check
     const tabindexElements = html.match(/tabindex=["']-?[0-9]+["']/g) || [];
     for (const tabindex of tabindexElements) {
       const value = parseInt(
@@ -356,7 +356,7 @@ const accessibilityTools = {
       }
     }
 
-    // onClick olup keyboard event olmayanlar
+    // Elements with onClick but no keyboard event
     const onClickElements =
       html.match(/<[^>]*onclick=["'][^"']*["'][^>]*>/g) || [];
     for (const element of onClickElements) {
@@ -383,14 +383,14 @@ const accessibilityTools = {
     };
   },
 
-  // Form erişilebilirlik kontrolü
+  // Form accessibility check
   formAccessibility: async (html: string) => {
     const issues = [];
 
-    // Label kontrolü
+    // Label check
     const inputs = html.match(/<input[^>]*>/g) || [];
     for (const input of inputs) {
-      // Hidden input hariç diğer inputlar için label kontrolü
+      // Check labels for all inputs except hidden
       if (!input.includes('type="hidden"')) {
         const id = input.match(/id=["']([^"']*)["']/)?.[1];
 
@@ -429,7 +429,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // URL doğrulama
+    // URL validation
     try {
       new URL(url);
     } catch (_) {
@@ -439,7 +439,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Web sayfasını getir
+    // Fetch the web page
     let response;
     try {
       response = await fetch(url);
@@ -457,10 +457,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // HTML içeriğini al
+    // Get HTML content
     const html = await response.text();
 
-    // Kontrolleri gerçekleştir
+    // Perform the checks
     const results = {
       url,
       timestamp: new Date().toISOString(),
@@ -480,13 +480,13 @@ export async function POST(request: NextRequest) {
       },
     };
 
-    // Özet hesapla
+    // Calculate summary
     let errors = 0;
     let warnings = 0;
     let total = 0;
 
     for (const test of Object.values(results.tests)) {
-      // TypeScript için tip güvenliği
+      // Type safety for TypeScript
       const testResult = test as { passed: boolean; issues: { type: string }[] };
       total += testResult.issues.length;
 

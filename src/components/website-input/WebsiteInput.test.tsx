@@ -7,15 +7,8 @@ import '@testing-library/jest-dom';
 import { render, screen, fireEvent } from '@testing-library/react';
 import WebsiteInput from './WebsiteInput';
 
-// Extend Jest matchers
-declare global {
-  namespace jest {
-    interface Matchers<R> {
-      toBeInTheDocument(): R;
-      toHaveValue(value: string): R;
-    }
-  }
-}
+// Import the matchers from the testing library to fix TypeScript errors
+import type {} from '@testing-library/jest-dom/extend-expect';
 
 // Mock the Next.js router
 jest.mock('next/navigation', () => ({
@@ -59,7 +52,9 @@ describe('WebsiteInput Component', () => {
     fireEvent.click(button);
 
     // Check error message - use the exact text from the component
-    const errorMessage = screen.getByText('Please enter a valid URL (e.g., https://example.com)');
+    const errorMessage = screen.getByText(
+      'Please enter a valid URL (e.g., https://example.com)'
+    );
     expect(errorMessage).toBeInTheDocument();
   });
 });

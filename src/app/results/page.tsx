@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import styles from '../page.module.css';
@@ -51,10 +51,6 @@ interface AnalysisResults {
     formAccessibility: TestResult;
   };
 }
-
-type ErrorWithMessage = {
-  message: string;
-};
 
 // Function to determine color and icon based on issue type
 const getIssueStyles = (type: string) => {
@@ -136,7 +132,7 @@ const getSuggestion = (code: string) => {
   );
 };
 
-export default function Results() {
+function ResultsContent() {
   const searchParams = useSearchParams();
   const url = searchParams?.get('url') || null;
 
@@ -400,5 +396,32 @@ export default function Results() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Loading fallback for Suspense
+function ResultsLoading() {
+  return (
+    <div className={styles.page}>
+      <div className="container">
+        <h1>Loading Results...</h1>
+        <div className={styles.loadingContainer}>
+          <FontAwesomeIcon
+            icon={faSpinner}
+            className={styles.spinner}
+            size="3x"
+          />
+          <p>Loading page content...</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function Results() {
+  return (
+    <Suspense fallback={<ResultsLoading />}>
+      <ResultsContent />
+    </Suspense>
   );
 }

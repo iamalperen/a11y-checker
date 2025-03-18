@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
     // URL validation
     try {
       new URL(url);
-    } catch (_) {
+    } catch (_unused) {
       return NextResponse.json(
         { error: 'Invalid URL format' },
         { status: 400 }
@@ -374,7 +374,6 @@ export async function POST(request: NextRequest) {
       // Calculate summary statistics
       const errorCount = formattedViolations.length;
       const warningCount = formattedIncomplete.length;
-      const passCount = formattedPasses.length;
       const totalIssues = errorCount + warningCount;
 
       // Create the final response
@@ -407,8 +406,8 @@ export async function POST(request: NextRequest) {
       const basicResults = await runBasicAccessibilityChecks(html);
 
       // Calculate summary statistics for basic results
-      const errorCount = Object.values(basicResults).reduce(
-        (count, category: any) =>
+      const errorCount = Object.values(basicResults as Record<string, { issues: Array<{ type: string }> }>).reduce(
+        (count, category: { issues: Array<{ type: string }> }) =>
           count +
           category.issues.filter(
             (issue: { type: string }) => issue.type === 'error'
@@ -417,7 +416,7 @@ export async function POST(request: NextRequest) {
       );
 
       const warningCount = Object.values(basicResults).reduce(
-        (count, category: any) =>
+        (count, category: { issues: Array<{ type: string }> }) =>
           count +
           category.issues.filter(
             (issue: { type: string }) => issue.type === 'warning'
@@ -426,7 +425,7 @@ export async function POST(request: NextRequest) {
       );
 
       const passedCount = Object.values(basicResults).filter(
-        (category: any) => category.passed
+        (category: { passed: boolean }) => category.passed
       ).length;
 
       // Create the final response with basic results

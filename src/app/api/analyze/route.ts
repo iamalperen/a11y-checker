@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
     // URL validation
     try {
       new URL(url);
-    } catch (_unused) {
+    } catch (/* eslint-disable-next-line @typescript-eslint/no-unused-vars */ _) {
       return NextResponse.json(
         { error: 'Invalid URL format' },
         { status: 400 }
@@ -406,7 +406,9 @@ export async function POST(request: NextRequest) {
       const basicResults = await runBasicAccessibilityChecks(html);
 
       // Calculate summary statistics for basic results
-      const errorCount = Object.values(basicResults as Record<string, { issues: Array<{ type: string }> }>).reduce(
+      const errorCount = Object.values(
+        basicResults as Record<string, { issues: Array<{ type: string }> }>
+      ).reduce(
         (count, category: { issues: Array<{ type: string }> }) =>
           count +
           category.issues.filter(

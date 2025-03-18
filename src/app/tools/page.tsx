@@ -23,8 +23,8 @@ export default function Tools() {
             <h2>Color Contrast Checker</h2>
             <p>
               Advanced color contrast analysis that detects potential issues in
-              your website&apos;s color palette. Verifies if your color 
-              combinations meet WCAG 2.1 AA standards (4.5:1 for normal text).
+              your website&apos;s color palette. Verifies if your color combinations 
+              meet WCAG 2.1 AA standards (4.5:1 for normal text).
             </p>
           </div>
           <div className={styles.toolCard}>

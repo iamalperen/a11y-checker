@@ -1,0 +1,21 @@
+.developmentNotice {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  border-radius: 8px;
+  background-color: var(--info-bg-color, #e3f2fd);
+  border-left: 4px solid var(--info-border-color, #2196f3);
+}
+
+.developmentNotice h2 {
+  margin-top: 0;
+  color: var(--info-title-color, #0d47a1);
+}
+
+.developmentNotice a {
+  color: var(--link-color, #1976d2);
+  text-decoration: underline;
+}
+
+.developmentNotice a:hover {
+  text-decoration: none;
+} 

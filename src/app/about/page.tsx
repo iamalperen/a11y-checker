@@ -1,10 +1,35 @@
 import styles from '../page.module.css';
+import aboutStyles from './About.module.css';
 
 export default function About() {
   return (
     <div className={styles.page}>
       <div className="container">
         <h1>About A11Y Checker</h1>
+
+        <section
+          className={`${styles.aboutSection} ${aboutStyles.developmentNotice}`}
+        >
+          <h2>Development Status</h2>
+          <p>
+            A11Y Checker is currently in <strong>beta</strong>. I am actively
+            developing new features and improving existing ones. Your feedback
+            is invaluable to me during this development phase.
+          </p>
+          <p>
+            I welcome your comments, suggestions, and bug reports. Please feel
+            free to contact me or open an issue on my{' '}
+            <a
+              href="https://github.com/iamalperen/a11y-checker"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {' '}
+              GitHub repository
+            </a>
+            .
+          </p>
+        </section>
 
         <section className={styles.aboutSection}>
           <h2>Mission</h2>

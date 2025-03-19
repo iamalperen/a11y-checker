@@ -27,6 +27,7 @@ export default function Header() {
             className={styles.logoIcon}
           />
           <span className={styles.logoText}>A11Y Checker</span>
+          <span className={styles.betaBadge} aria-label="beta sürümü">beta</span>
         </Link>
 
         <nav className={styles.navbar}>
